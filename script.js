@@ -3,43 +3,15 @@ const resetBtn = document.getElementById("reset-btn");
 const shuffleBtn = document.getElementById("shuffle-btn");
 const bingoMessage = document.getElementById("bingo-message");
 
-const prompts = [
-  "Someone rolls a nat 1",
-  "Someone rolls a nat 20",
-  "The party argues for 5+ minutes",
-  "An NPC gets adopted",
-  "A plan immediately fails",
-  "Someone forgets a rule",
-  "A player says 'can I do that?'",
-  "Combat takes longer than expected",
-  "A joke becomes canon",
-  "The DM improvises a name",
-  "Someone threatens arson",
-  "Loot is split unevenly",
-  "A player talks to an animal",
-  "An encounter gets derailed",
-  "The rogue does rogue things",
-  "Someone tries seduction",
-  "The party ignores the obvious path",
-  "A door becomes a major obstacle",
-  "Someone checks for traps",
-  "A spell causes chaos",
-  "A backstory moment happens",
-  "The bard says something unhinged",
-  "Someone hoards healing items",
-  "A simple quest becomes complicated",
-  "The group bullies the DM",
-  "A cursed item appears",
-  "The cleric saves everyone",
-  "The barbarian solves it violently",
-  "Stealth goes badly",
-  "A shopping trip takes forever",
-  "Someone speaks out of character and it fits",
-  "The villain monologues",
-  "An NPC lies badly",
-  "The party misses the clue",
-  "Someone says 'one more session'"
-];
+async function loadPrompts() {
+  const response = await fetch("prompts.txt");
+  const text = await response.text();
+
+  return text
+    .split("\n")
+    .map(line => line.trim())
+    .filter(line => line.length > 0);
+}
 
 function shuffleArray(array) {
   const copy = [...array];
@@ -50,9 +22,16 @@ function shuffleArray(array) {
   return copy;
 }
 
-function generateBoard() {
+async function generateBoard() {
   board.innerHTML = "";
   bingoMessage.textContent = "";
+
+  const prompts = await loadPrompts();
+
+  if (prompts.length < 24) {
+    alert("Need at least 24 prompts in prompts.txt!");
+    return;
+  }
 
   const shuffled = shuffleArray(prompts).slice(0, 24);
   let promptIndex = 0;
@@ -67,6 +46,7 @@ function generateBoard() {
     } else {
       cell.textContent = shuffled[promptIndex];
       promptIndex++;
+
       cell.addEventListener("click", () => {
         cell.classList.toggle("marked");
         checkBingo();
