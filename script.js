@@ -13,12 +13,15 @@ async function loadPrompts() {
     .filter(line => line.length > 0);
 }
 
-function shuffleArray(array) {
+function shuffleArray(array, seed) {
+  const rng = seed ? seededRandom(seed) : Math.random;
   const copy = [...array];
+
   for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(rng() * (i + 1));
     [copy[i], copy[j]] = [copy[j], copy[i]];
   }
+
   return copy;
 }
 
@@ -33,7 +36,8 @@ async function generateBoard() {
     return;
   }
 
-  const shuffled = shuffleArray(prompts).slice(0, 24);
+  const seed = getSeedFromURL();
+  const shuffled = shuffleArray(prompts, seed).slice(0, 24);
   let promptIndex = 0;
 
   for (let i = 0; i < 25; i++) {
@@ -95,6 +99,25 @@ function checkBingo() {
   const hasBingo = winningLines.some(line => line.every(index => marked[index]));
 
   bingoMessage.textContent = hasBingo ? "BINGO!" : "";
+}
+
+function seededRandom(seed) {
+  let h = 2166136261 >>> 0;
+  for (let i = 0; i < seed.length; i++) {
+    h ^= seed.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return function () {
+    h += h << 13; h ^= h >>> 7;
+    h += h << 3; h ^= h >>> 17;
+    h += h << 5;
+    return (h >>> 0) / 4294967296;
+  };
+}
+
+function getSeedFromURL() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get("seed");
 }
 
 resetBtn.addEventListener("click", resetMarks);
